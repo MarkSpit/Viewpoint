@@ -40,6 +40,9 @@ module Viewpoint
           type = item.keys.first
           eval "#{type.to_s.camel_case}.new(item[type], :shallow => #{shallow})"
         else
+          if resp.code == "ErrorItemNotFound"
+            return nil
+          end
           raise EwsError, "Could not retrieve item. #{resp.code}: #{resp.message}"
         end
       end

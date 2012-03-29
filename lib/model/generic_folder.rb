@@ -69,8 +69,8 @@ module Viewpoint
         if( folder_type.nil? )
           resp = (Viewpoint::EWS::EWS.instance).ews.find_folder( [normalize_id(root)], traversal, {:base_shape => shape} )
         else
-          restr = {:restriction => 
-            {:is_equal_to => [{:field_uRI => {:field_uRI=>'folder:FolderClass'}}, {:field_uRI_or_constant=>{:constant => {:value => folder_type}}}]}
+          restr = {:restriction =>
+                       {:is_equal_to => [{:field_uRI => {:field_uRI=>'folder:FolderClass'}}, {:field_uRI_or_constant=>{:constant => {:value => folder_type}}}]}
           }
           resp = (Viewpoint::EWS::EWS.instance).ews.find_folder( [normalize_id(root)], traversal, {:base_shape => shape}, restr)
         end
@@ -118,8 +118,8 @@ module Viewpoint
         # For now the :field_uRI and :field_uRI_or_constant must be in an Array for Ruby 1.8.7 because Hashes
         # are not positional at insertion until 1.9
         restr = {:restriction =>
-          {:is_equal_to => 
-            [{:field_uRI => {:field_uRI=>'folder:DisplayName'}}, {:field_uRI_or_constant =>{:constant => {:value=>name}}}]}}
+                     {:is_equal_to =>
+                          [{:field_uRI => {:field_uRI=>'folder:DisplayName'}}, {:field_uRI_or_constant =>{:constant => {:value=>name}}}]}}
         resp = (Viewpoint::EWS::EWS.instance).ews.find_folder([root], opts[:traversal], {:base_shape => shape}, restr)
         if(resp.status == 'Success')
           raise EwsFolderNotFound, "The folder requested is invalid or unavailable" if resp.items.empty?
@@ -171,8 +171,8 @@ module Viewpoint
         end
         define_str_var :display_name, :folder_class
         define_int_var :child_folder_count, :total_count
-        # @todo Handle:
-        #   <EffectiveRights/>, <ExtendedProperty/>, <ManagedFolderInformation/>, <PermissionSet/>
+                # @todo Handle:
+                #   <EffectiveRights/>, <ExtendedProperty/>, <ManagedFolderInformation/>, <PermissionSet/>
 
         @sync_state = nil # Base-64 encoded sync data
         @synced = false   # Whether or not the synchronization process is complete
@@ -219,6 +219,32 @@ module Viewpoint
         resp = (Viewpoint::EWS::EWS.instance).ews.unsubscribe(@subscription_id)
         if(resp.status == 'Success')
           @subscription_id, @watermark = nil, nil
+          return true
+        else
+          raise StandardError, "Error: #{resp.message}"
+        end
+      end
+
+      # Push subscribe this folder to events.  This method initiates an Exchange push
+      # type subscription.
+      #
+      # @param [Array] folder_ids Which folders should be monitored.
+      # @param [String] url Where EWS posts events to (your listening server)
+      # @param [Array] event_types Which event types to subscribe to.  By default
+      #   we subscribe to all Exchange event types: CopiedEvent, CreatedEvent,
+      #   DeletedEvent, ModifiedEvent, MovedEvent, NewMailEvent, FreeBusyChangedEvent
+      # @param [String] watermark
+      # @param [Integer] status_frequency time in minutes where EWS sends a notification
+      # @return [Boolean] Did the subscription happen successfully?
+      # @todo Add custom Exception for EWS
+      def push_subscribe(folder_ids, url, event_types = @@event_types, watermark=nil, status_frequency=5)
+        # Refresh the subscription if already subscribed
+        unsubscribe if subscribed?
+
+        resp = (Viewpoint::EWS::EWS.instance).ews.push_subscribe(folder_ids,event_types, url, watermark, status_frequency)
+        if(resp.status == 'Success')
+          @subscription_id = resp.items.first[:subscription_id][:text]
+          @watermark = resp.items.first[:watermark][:text]
           return true
         else
           raise StandardError, "Error: #{resp.message}"
@@ -278,10 +304,10 @@ module Viewpoint
       # @param [DateTime] date_time the time to fetch Items since.
       def items_since(date_time, opts = {})
         restr = {:restriction =>
-          {:is_greater_than_or_equal_to => 
-            [{:field_uRI => {:field_uRI=>'item:DateTimeReceived'}},
-            {:field_uRI_or_constant =>{:constant => {:value=>date_time}}}]
-          }}
+                     {:is_greater_than_or_equal_to =>
+                          [{:field_uRI => {:field_uRI=>'item:DateTimeReceived'}},
+                           {:field_uRI_or_constant =>{:constant => {:value=>date_time}}}]
+                     }}
         find_items(opts.merge(restr))
       end
 
@@ -290,12 +316,12 @@ module Viewpoint
       # @param [DateTime] end_date the time to stop fetching Items from
       def items_between(start_date, end_date, opts={})
         restr = {:restriction =>  {:and => [
-          {:is_greater_than_or_equal_to => 
-            [{:field_uRI => {:field_uRI=>'item:DateTimeReceived'}},
-            {:field_uRI_or_constant=>{:constant => {:value =>start_date}}}]},
-          {:is_less_than_or_equal_to =>
-            [{:field_uRI => {:field_uRI=>'item:DateTimeReceived'}},
-            {:field_uRI_or_constant=>{:constant => {:value =>end_date}}}]}
+            {:is_greater_than_or_equal_to =>
+                 [{:field_uRI => {:field_uRI=>'item:DateTimeReceived'}},
+                  {:field_uRI_or_constant=>{:constant => {:value =>start_date}}}]},
+            {:is_less_than_or_equal_to =>
+                 [{:field_uRI => {:field_uRI=>'item:DateTimeReceived'}},
+                  {:field_uRI_or_constant=>{:constant => {:value =>end_date}}}]}
         ]}}
         find_items(opts.merge(restr))
       end
@@ -306,23 +332,23 @@ module Viewpoint
       # @param [String,nil] exclude_str A string to exclude from matches against the subject.  This is optional.
       def search_by_subject(match_str, exclude_str = nil)
         match = {:contains =>
-          [
-            {:containment_mode => 'Substring'},
-            {:containment_comparison => 'IgnoreCase'},
-            {:field_uRI => {:field_uRI=>'item:Subject'}},
-            {:constant => {:value =>match_str}}
-          ]
+                     [
+                         {:containment_mode => 'Substring'},
+                         {:containment_comparison => 'IgnoreCase'},
+                         {:field_uRI => {:field_uRI=>'item:Subject'}},
+                         {:constant => {:value =>match_str}}
+                     ]
         }
         unless exclude_str.nil?
           excl = {:not =>
-            {:contains =>
-              [
-                {:containment_mode => 'Substring'},
-                {:containment_comparison => 'IgnoreCase'},
-                {:field_uRI => {:field_uRI=>'item:Subject'}},
-                {:constant => {:value =>exclude_str}}
-              ]
-            }
+                      {:contains =>
+                           [
+                               {:containment_mode => 'Substring'},
+                               {:containment_comparison => 'IgnoreCase'},
+                               {:field_uRI => {:field_uRI=>'item:Subject'}},
+                               {:constant => {:value =>exclude_str}}
+                           ]
+                      }
           }
 
           match[:and] = [{:contains => match.delete(:contains)}, excl]
@@ -356,7 +382,7 @@ module Viewpoint
       #   optional parameters that specify the desired fields to return.
       def get_items(item_ids, change_key = nil, options={})
         item_shape = options[:item_shape] ||
-          {:base_shape => 'Default', :additional_properties => {:field_uRI => ['item:ParentFolderId']}}
+            {:base_shape => 'Default', :additional_properties => {:field_uRI => ['item:ParentFolderId']}}
         shallow = item_shape[:base_shape] != 'AllProperties'
         resp = (Viewpoint::EWS::EWS.instance).ews.get_item(item_ids, item_shape)
         if(resp.status == 'Success')

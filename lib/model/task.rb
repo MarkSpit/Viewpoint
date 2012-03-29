@@ -61,14 +61,12 @@ module Viewpoint
       def self.create_task(folder, subject, body, v_start = nil, v_end = nil, status = nil)
         item = {}
         item[:subject] = {:text => subject}
-        item[:body] = {:text => body, :body_type => 'Text'} unless body.nil?
+        item[:body] = {:text => body, :body_type => 'HTML'} unless body.nil?
         item[:start_date] = {:text => v_start.to_s} unless v_start.nil?
         item[:due_date] = {:text => v_end.to_s} unless v_end.nil?
         item[:status] = {:text => status} unless status.nil?
-        
         self.create_item_from_hash(item, folder)
       end
-
 
       # Initialize an Exchange Web Services item of type Task
       def initialize(ews_item, opts={})
@@ -110,7 +108,7 @@ module Viewpoint
 
       def init_methods
         super
-        define_str_var :status, :owner
+        define_str_var :status, :owner, :billing_information
         define_bool_var :is_complete, :is_recurring, :is_team_task
         define_int_var :percent_complete, :actual_work, :change_count
         define_datetime_var :start_date, :due_date, :complete_date
