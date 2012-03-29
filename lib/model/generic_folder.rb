@@ -368,6 +368,8 @@ module Viewpoint
           item = resp.items.shift
           type = item.keys.first
           eval "#{type.to_s.camel_case}.new(item[type])"
+        elsif(resp.code == "ErrorItemNotFound")
+          return nil
         else
           raise EwsError, "Could not retrieve item. #{resp.code}: #{resp.message}"
         end

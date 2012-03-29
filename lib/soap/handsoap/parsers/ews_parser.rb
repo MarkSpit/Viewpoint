@@ -111,6 +111,9 @@ module Viewpoint
               @response_message.items << xml_to_hash!(item.native_element)
             end
           else
+            if(@response_message.code == "ErrorItemNotFound")
+              return @response_message
+            end
             raise EwsError, "#{@response_message.code}: #{@response_message.message}"
           end
         end
