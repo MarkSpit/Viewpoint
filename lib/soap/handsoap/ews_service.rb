@@ -62,11 +62,12 @@ module Viewpoint
         # ********* Begin Hooks *********
 
 
-        def on_create_document(doc)
+        def on_create_document(doc, server_version)
           doc.alias NS_EWS_TYPES, 'http://schemas.microsoft.com/exchange/services/2006/types'
           doc.alias NS_EWS_MESSAGES, 'http://schemas.microsoft.com/exchange/services/2006/messages'
           header = doc.find('Header')
-          header.add("#{NS_EWS_TYPES}:RequestServerVersion") { |rsv| rsv.set_attr('Version','Exchange2007_SP1') }
+          header.add("#{NS_EWS_TYPES}:RequestServerVersion") { |rsv| rsv.set_attr('Version',server_version) }
+          #header.add("#{NS_EWS_TYPES}:RequestServerVersion") { |rsv| rsv.set_attr('Version','Exchange2007_SP1') }
         end
 
         # Adds knowledge of namespaces to the response object.  These have to be identical to the 
@@ -91,12 +92,12 @@ module Viewpoint
 
         def on_http_error(response)
           case response.status
-          when 401
-            raise EwsLoginError, "Failed to login to EWS at #{uri}. Please check your credentials."
-          when 404
-            raise EwsError, "File not found (404): #{uri} Please check the endpoint URL. Body: #{response.body}"
-          else
-            raise EwsError, "Unknown error (#{response.status}): #{uri} : Body: #{response.body}"
+            when 401
+              raise EwsLoginError, "Failed to login to EWS at #{uri}. Please check your credentials."
+            when 404
+              raise EwsError, "File not found (404): #{uri} Please check the endpoint URL. Body: #{response.body}"
+            else
+              raise EwsError, "Unknown error (#{response.status}): #{uri} : Body: #{response.body}"
           end
         end
 
@@ -483,7 +484,7 @@ module Viewpoint
           end
           parse!(resp)
         end
-        
+
         # Operation is used to create task items
         # This is actually a CreateItem operation but they differ for different types
         # of Exchange objects so it is named appropriately here.
@@ -505,7 +506,7 @@ module Viewpoint
           end
           parse!(resp)
         end
-        
+
         # Operation is used to create contact items
         # This is actually a CreateItem operation but they differ for different types
         # of Exchange objects so it is named appropriately here.
@@ -714,7 +715,7 @@ module Viewpoint
           end
           parse!(resp)
         end
-        
+
         # Updates delegate permissions on a principal's mailbox
         # @see http://msdn.microsoft.com/en-us/library/bb856529.aspx
         #
@@ -767,6 +768,18 @@ module Viewpoint
           parse!(resp)
         end
 
+        def get_user_configuration
+          action = "#{SOAP_ACTION_PREFIX}/GetUserConfiguration"
+          http_options = @@http_options
+          @@http_options = {:soap_action => :auto, :http_options => nil , :server_version => "Exchange2010_SP2"}
+          resp = invoke("#{NS_EWS_MESSAGES}:GetUserConfiguration", nil) do |root|
+            build!(root) do
+              add_hierarchy!(root, {:user_configuration_name => {:name => "CategoryList", :sub_elements => {'DistinguishedFolderId' => {:id => 'calendar'}}}, :user_configuration_properties => {:text => "XmlData"}}, NS_EWS_MESSAGES)
+            end
+          end
+          @@http_options = http_options
+          parse!(resp)
+        end
 
         # Private Methods (Builders and Parsers)
         private

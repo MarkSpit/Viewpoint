@@ -205,6 +205,10 @@ module Viewpoint
           @response_message.items = xml_to_hash!((@response/"//#{NS_EWS_TYPES}:OofSettings").first.native_element)
         end
 
+        def get_user_configuration_response(opts)
+          @response_message.items = xml_to_hash!((@response/"//#{NS_EWS_MESSAGES}:UserConfiguration").first.native_element).inspect
+        end
+
         # Parse out the free/busy time.
         # @see http://msdn.microsoft.com/en-us/library/aa494212.aspx
         def get_user_availability_response(opts)

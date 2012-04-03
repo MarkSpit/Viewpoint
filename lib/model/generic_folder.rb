@@ -361,8 +361,8 @@ module Viewpoint
       # @param [String] item_id the ID of the item to fetch
       # @param [String] change_key specify an optional change_key if you want to
       #   make sure you are fetching a specific version of the object.
-      def get_item(item_id, change_key = nil)
-        item_shape = {:base_shape => 'Default', :additional_properties => {:field_uRI => ['item:ParentFolderId']}}
+      def get_item(item_id, change_key = nil, base_shape = 'Default')
+        item_shape = {:base_shape => base_shape, :additional_properties => {:field_uRI => ['item:ParentFolderId']}}
         resp = (Viewpoint::EWS::EWS.instance).ews.get_item([item_id], item_shape)
         if(resp.status == 'Success')
           item = resp.items.shift

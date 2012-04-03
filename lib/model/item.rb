@@ -58,7 +58,7 @@ module Viewpoint
         attachments.each do |a|
           b64attach << {:name => {:text =>(File.basename a.path)}, :content => {:text => Base64.encode64(a.read)}}
         end
-        resp = conn.ews.create_attachment(parent_id, b64attach) 
+        resp = conn.ews.create_attachment(parent_id, b64attach)
         (resp.status == 'Success') || (raise EwsError, "Could not create attachments. #{resp.code}: #{resp.message}")
         {:id => resp.items.first[:attachment_id][:root_item_id], :change_key => resp.items.first[:attachment_id][:root_item_change_key]}
       end
@@ -183,7 +183,7 @@ module Viewpoint
         return true unless @shallow
         conn = Viewpoint::EWS::EWS.instance
         shape = {:base_shape => 'AllProperties', :body_type => (@text_only ? 'Text' : 'Best')}
-        resp = conn.ews.get_item([@item_id], shape) 
+        resp = conn.ews.get_item([@item_id], shape)
         resp = resp.items.shift
         @ews_item = resp[resp.keys.first]
         @shallow = false
@@ -279,7 +279,20 @@ module Viewpoint
         GenericFolder.get_folder @parent_folder_id
       end
 
-
+      def categories
+        if @categories.nil?
+          return nil
+        elsif @categories[:string].is_a?(Array)
+          cat_names_in_a = @categories[:string]
+          cat_names = Array.new
+          cat_names_in_a.each do |cn|
+            cat_names.push(cn[:text])
+          end
+          return cat_names
+        else
+          return [@categories[:string][:text]]
+        end
+      end
 
       private
 
@@ -289,6 +302,7 @@ module Viewpoint
       def init_methods
         @parent_folder_id = @ews_item[:parent_folder_id][:id] if @ews_item[:parent_folder_id].is_a?(Hash)
         @conversation_id  = @ews_item[:conversation_id][:id] if @ews_item[:conversation_id].is_a?(Hash)
+        @categories = @ews_item[:categories]
         @ews_methods << :item_id
         define_str_var :subject, :sensitivity, :body, :item_class, :importance, :in_reply_to, :unique_body
         define_str_var :display_cc, :display_to, :culture, :last_modified_name, :mime_content

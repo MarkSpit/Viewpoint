@@ -199,7 +199,7 @@ module Viewpoint
         :global_unique_senders  => {:text => 'conversation:GlobalUniqueSenders', :writable => true},
         :last_delivery_time  => {:text => 'conversation:LastDeliveryTime', :writable => true},
         :global_last_delivery_time  => {:text => 'conversation:GlobalLastDeliveryTime', :writable => true},
-        :categories  => {:text => 'conversation:Categories', :writable => true},
+       # :categories  => {:text => 'conversation:Categories', :writable => true},
         :global_categories  => {:text => 'conversation:GlobalCategories', :writable => true},
         :flag_status  => {:text => 'conversation:FlagStatus', :writable => true},
         :global_flag_status  => {:text => 'conversation:GlobalFlagStatus', :writable => true},
