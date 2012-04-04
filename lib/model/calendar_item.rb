@@ -83,14 +83,14 @@ module Viewpoint
       # @param [Array<String,MailboxUser,Attendee>,optional] required_attendees An Array of e-mail addresses of required attendees
       # @param [Array<String,MailboxUser,Attendee>,optional] optional_attendees An Array of e-mail addresses of optional attendees
       # @param [Array<String,MailboxUser,Attendee>,optional] resources An Array of e-mail addresses of resources
-      def self.create_item(v_start, v_end, subject, body = nil, location = nil, required_attendees=[], optional_attendees=[], resources=[])
+      def self.create_item(v_start, v_end, subject, body = nil, location = nil, required_attendees=[], optional_attendees=[], resources=[], folder_id = nil)
         item = {}
-        opts = {:folder_id => :calendar, :send_invites => 'SendToAllAndSaveCopy'}
+        opts = {:folder_id => folder_id ? folder_id : :calendar, :send_invites => 'SendToAllAndSaveCopy'}
         yield opts if block_given?
         item[:start] = {:text => v_start.to_s}
         item[:end] = {:text => v_end.to_s}
         item[:subject] = {:text => subject}
-        item[:body] = {:text => body, :body_type => 'Text'} unless body.nil?
+        item[:body] = {:text => body, :body_type => 'HTML'} unless body.nil?
         item[:location] = {:text => location} unless location.nil?
         item.merge!(self.format_attendees(required_attendees)) unless required_attendees.empty?
         item.merge!(self.format_attendees(optional_attendees, :optional_attendees)) unless optional_attendees.empty?

@@ -62,7 +62,7 @@ module Viewpoint
         # ********* Begin Hooks *********
 
 
-        def on_create_document(doc, server_version)
+        def on_create_document(doc, server_version = "Exchange2007_SP1")
           doc.alias NS_EWS_TYPES, 'http://schemas.microsoft.com/exchange/services/2006/types'
           doc.alias NS_EWS_MESSAGES, 'http://schemas.microsoft.com/exchange/services/2006/messages'
           header = doc.find('Header')
