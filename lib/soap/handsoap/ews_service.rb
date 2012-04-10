@@ -249,7 +249,7 @@ module Viewpoint
         # @param [String,Symbol] parent_folder_id either the name of a folder or it's
         #   numerical ID.  See: http://msdn.microsoft.com/en-us/library/aa565998.aspx
         # @param [Array,String] folder_name The display name for the new folder or folders
-        def create_folder(parent_folder_id, folder_name)
+        def create_folder(parent_folder_id, folder_name, folder_type = :folder)
           action = "#{SOAP_ACTION_PREFIX}/CreateFolder"
           resp = invoke("#{NS_EWS_MESSAGES}:CreateFolder", action) do |root|
             build!(root) do
@@ -259,12 +259,14 @@ module Viewpoint
               folder_name = (folder_name.is_a?(Array)) ? folder_name : [folder_name]
               root.add("#{NS_EWS_MESSAGES}:Folders") do |fids|
                 folder_name.each do |f|
-                  add_hierarchy!(fids, {:folder => {:display_name => {:text => f}}})
+                  add_hierarchy!(fids, {folder_type => {:display_name => {:text => f}}})
                 end
               end
             end
           end
-          parse!(resp)
+          response = parse!(resp)
+
+          response.items.first[folder_type][:folder_id][:id]
         end
 
         # Deletes folders from a mailbox.
@@ -768,7 +770,7 @@ module Viewpoint
           parse!(resp)
         end
 
-        def get_user_configuration
+        def get_categories
           action = "#{SOAP_ACTION_PREFIX}/GetUserConfiguration"
           http_options = @@http_options
           @@http_options = {:soap_action => :auto, :http_options => nil , :server_version => "Exchange2010_SP2"}
@@ -778,7 +780,7 @@ module Viewpoint
             end
           end
           @@http_options = http_options
-          parse!(resp)
+          cat_resp = parse!(resp)
         end
 
         # Private Methods (Builders and Parsers)

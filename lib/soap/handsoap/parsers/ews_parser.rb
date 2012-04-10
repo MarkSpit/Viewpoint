@@ -206,7 +206,9 @@ module Viewpoint
         end
 
         def get_user_configuration_response(opts)
-          @response_message.items = xml_to_hash!((@response/"//#{NS_EWS_MESSAGES}:UserConfiguration").first.native_element).inspect
+          @response_message.items = xml_to_hash!((@response/"//#{NS_EWS_MESSAGES}:UserConfiguration").first.native_element)
+          @response_message.items[:user_configuration][:xml_data][:text]
+          Base64.decode64(@response_message.items[:user_configuration][:xml_data][:text][4..-4])
         end
 
         # Parse out the free/busy time.

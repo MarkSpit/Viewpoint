@@ -237,7 +237,7 @@ module Viewpoint
       # @param [Integer] status_frequency time in minutes where EWS sends a notification
       # @return [Boolean] Did the subscription happen successfully?
       # @todo Add custom Exception for EWS
-      def push_subscribe(folder_ids, url, event_types = @@event_types, watermark=nil, status_frequency=5)
+      def push_subscribe(folder_ids, url, watermark=nil, event_types = @@event_types, status_frequency=5)
         # Refresh the subscription if already subscribed
         unsubscribe if subscribed?
 
